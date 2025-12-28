@@ -20,7 +20,8 @@ router.get('/dashboard/stats', async (req, res) => {
       pendingApplications,
       pendingProducts,
       totalOrders,
-      totalCategories
+      totalCategories,
+      totalRevenue
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'USER' } }),
       prisma.vendor.count({ where: { isApproved: true } }),
@@ -28,7 +29,12 @@ router.get('/dashboard/stats', async (req, res) => {
       prisma.vendorApplication.count({ where: { status: 'PENDING' } }),
       prisma.product.count({ where: { isApproved: false, isActive: true } }),
       prisma.order.count(),
-      prisma.category.count({ where: { isActive: true } })
+      prisma.category.count({ where: { isActive: true } }),
+      prisma.order.aggregate({
+        _sum: {
+          totalAmount: true
+        }
+      })
     ]);
 
     res.json({
@@ -40,7 +46,8 @@ router.get('/dashboard/stats', async (req, res) => {
         pendingApplications,
         pendingProducts,
         totalOrders,
-        totalCategories
+        totalCategories,
+        totalRevenue: totalRevenue._sum.totalAmount || 0
       }
     });
   } catch (error) {
@@ -48,6 +55,118 @@ router.get('/dashboard/stats', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch dashboard stats',
+      error: error.message
+    });
+  }
+});
+
+// Dashboard charts data
+router.get('/dashboard/charts', async (req, res) => {
+  try {
+    // Get orders over last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const orders = await prisma.order.findMany({
+      where: {
+        createdAt: {
+          gte: sixMonthsAgo
+        }
+      },
+      select: {
+        createdAt: true,
+        totalAmount: true,
+        items: {
+          select: {
+            quantity: true,
+            price: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    // Group by month
+    const ordersByMonth = {};
+    orders.forEach(order => {
+      const month = new Date(order.createdAt).toLocaleString('default', { month: 'short' });
+      if (!ordersByMonth[month]) {
+        ordersByMonth[month] = { orders: 0, revenue: 0 };
+      }
+      ordersByMonth[month].orders += 1;
+      ordersByMonth[month].revenue += order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    });
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const ordersOverTime = months.map(month => ({
+      month,
+      orders: ordersByMonth[month]?.orders || 0,
+      revenue: ordersByMonth[month]?.revenue || 0
+    }));
+
+    // Get category distribution
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      include: {
+        _count: {
+          select: {
+            products: {
+              where: {
+                isActive: true,
+                isApproved: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const categoryDistribution = categories
+      .map(cat => ({
+        name: cat.nameEn,
+        value: cat._count.products
+      }))
+      .filter(cat => cat.value > 0)
+      .slice(0, 6);
+
+    // Get user growth over last 6 months
+    const users = await prisma.user.findMany({
+      where: {
+        createdAt: {
+          gte: sixMonthsAgo
+        },
+        role: 'USER'
+      },
+      select: {
+        createdAt: true
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    const usersByMonth = {};
+    users.forEach(user => {
+      const month = new Date(user.createdAt).toLocaleString('default', { month: 'short' });
+      usersByMonth[month] = (usersByMonth[month] || 0) + 1;
+    });
+
+    const userGrowth = months.map(month => ({
+      month,
+      users: usersByMonth[month] || 0
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        ordersOverTime,
+        categoryDistribution,
+        userGrowth
+      }
+    });
+  } catch (error) {
+    console.error('Get dashboard charts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard charts',
       error: error.message
     });
   }
@@ -796,21 +915,36 @@ router.post('/statuses', upload.single('image'), [
 // Get reports data
 router.get('/reports', async (req, res) => {
   try {
-    const { type, startDate, endDate } = req.query;
+    const { type = '', startDate, endDate } = req.query;
+    const reportType = type === 'all' ? '' : type;
     
     let reportData = {};
+    let items = [];
+
+    // Build date filter
+    const dateFilter = {};
+    if (startDate || endDate) {
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        dateFilter.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.lte = end;
+      }
+    }
 
     // Users report
-    if (type === 'users' || !type) {
-      const usersWhere = {};
-      if (startDate || endDate) {
-        usersWhere.createdAt = {};
-        if (startDate) usersWhere.createdAt.gte = new Date(startDate);
-        if (endDate) usersWhere.createdAt.lte = new Date(endDate);
-      }
+    if (reportType === 'users' || !reportType) {
+      try {
+        const usersWhere = {};
+        if (Object.keys(dateFilter).length > 0) {
+          usersWhere.createdAt = dateFilter;
+        }
 
-      const [users, usersByRole] = await Promise.all([
-        prisma.user.findMany({
+        const users = await prisma.user.findMany({
           where: usersWhere,
           select: {
             id: true,
@@ -822,61 +956,71 @@ router.get('/reports', async (req, res) => {
             createdAt: true
           },
           orderBy: { createdAt: 'desc' }
-        }),
-        prisma.user.groupBy({
-          by: ['role'],
-          where: usersWhere,
-          _count: true
-        })
-      ]);
+        });
 
-      reportData.users = users;
-      reportData.usersByRole = usersByRole;
+        if (reportType === 'users') {
+          items = users;
+        } else {
+          reportData.users = users;
+        }
+      } catch (error) {
+        console.error('Error fetching users report:', error);
+        if (reportType === 'users') {
+          throw error;
+        }
+      }
     }
 
     // Vendors report
-    if (type === 'vendors' || !type) {
-      const vendorsWhere = {};
-      if (startDate || endDate) {
-        vendorsWhere.createdAt = {};
-        if (startDate) vendorsWhere.createdAt.gte = new Date(startDate);
-        if (endDate) vendorsWhere.createdAt.lte = new Date(endDate);
-      }
+    if (reportType === 'vendors' || !reportType) {
+      try {
+        const vendorsWhere = {};
+        if (Object.keys(dateFilter).length > 0) {
+          vendorsWhere.createdAt = dateFilter;
+        }
 
-      const vendors = await prisma.vendor.findMany({
-        where: vendorsWhere,
-        include: {
-          user: {
-            select: {
-              fullName: true,
-              email: true,
-              phone: true
+        const vendors = await prisma.vendor.findMany({
+          where: vendorsWhere,
+          include: {
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+                phone: true
+              }
+            },
+            _count: {
+              select: {
+                products: true,
+                statuses: true
+              }
             }
           },
-          _count: {
-            select: {
-              products: true,
-              statuses: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      });
+          orderBy: { createdAt: 'desc' }
+        });
 
-      reportData.vendors = vendors;
+        if (reportType === 'vendors') {
+          items = vendors;
+        } else {
+          reportData.vendors = vendors;
+        }
+      } catch (error) {
+        console.error('Error fetching vendors report:', error);
+        if (reportType === 'vendors') {
+          throw error;
+        }
+      }
     }
 
     // Products report
-    if (type === 'products' || !type) {
-      const productsWhere = {};
-      if (startDate || endDate) {
-        productsWhere.createdAt = {};
-        if (startDate) productsWhere.createdAt.gte = new Date(startDate);
-        if (endDate) productsWhere.createdAt.lte = new Date(endDate);
-      }
+    if (reportType === 'products' || !reportType) {
+      try {
+        const productsWhere = {};
+        if (Object.keys(dateFilter).length > 0) {
+          productsWhere.createdAt = dateFilter;
+        }
 
-      const [products, productsByCategory] = await Promise.all([
-        prisma.product.findMany({
+        const products = await prisma.product.findMany({
           where: productsWhere,
           include: {
             category: true,
@@ -891,29 +1035,30 @@ router.get('/reports', async (req, res) => {
             }
           },
           orderBy: { createdAt: 'desc' }
-        }),
-        prisma.product.groupBy({
-          by: ['categoryId'],
-          where: productsWhere,
-          _count: true
-        })
-      ]);
+        });
 
-      reportData.products = products;
-      reportData.productsByCategory = productsByCategory;
+        if (reportType === 'products') {
+          items = products;
+        } else {
+          reportData.products = products;
+        }
+      } catch (error) {
+        console.error('Error fetching products report:', error);
+        if (reportType === 'products') {
+          throw error;
+        }
+      }
     }
 
     // Orders report
-    if (type === 'orders' || !type) {
-      const ordersWhere = {};
-      if (startDate || endDate) {
-        ordersWhere.createdAt = {};
-        if (startDate) ordersWhere.createdAt.gte = new Date(startDate);
-        if (endDate) ordersWhere.createdAt.lte = new Date(endDate);
-      }
+    if (reportType === 'orders' || !reportType) {
+      try {
+        const ordersWhere = {};
+        if (Object.keys(dateFilter).length > 0) {
+          ordersWhere.createdAt = dateFilter;
+        }
 
-      const [orders, ordersByStatus] = await Promise.all([
-        prisma.order.findMany({
+        const orders = await prisma.order.findMany({
           where: ordersWhere,
           include: {
             user: {
@@ -933,53 +1078,100 @@ router.get('/reports', async (req, res) => {
             },
             items: {
               include: {
-                product: true
+                product: {
+                  select: {
+                    id: true,
+                    nameEn: true,
+                    nameAr: true,
+                    price: true
+                  }
+                }
               }
             }
           },
           orderBy: { createdAt: 'desc' }
-        }),
-        prisma.order.groupBy({
-          by: ['status'],
-          where: ordersWhere,
-          _count: true,
-          _sum: {
-            totalAmount: true
-          }
-        })
-      ]);
+        });
 
-      reportData.orders = orders;
-      reportData.ordersByStatus = ordersByStatus;
+        if (reportType === 'orders') {
+          items = orders;
+        } else {
+          reportData.orders = orders;
+        }
+      } catch (error) {
+        console.error('Error fetching orders report:', error);
+        if (reportType === 'orders') {
+          throw error;
+        }
+      }
     }
 
-    // Summary statistics
-    if (!type) {
-      const [
-        totalUsers,
-        totalVendors,
-        totalProducts,
-        totalOrders,
-        totalRevenue
-      ] = await Promise.all([
-        prisma.user.count({ where: { role: 'USER' } }),
-        prisma.vendor.count({ where: { isApproved: true } }),
-        prisma.product.count({ where: { isActive: true } }),
-        prisma.order.count(),
-        prisma.order.aggregate({
-          _sum: {
-            totalAmount: true
-          }
-        })
-      ]);
+    // Summary statistics (only for 'all' reports)
+    if (!reportType) {
+      try {
+        const summaryWhere = {};
+        if (Object.keys(dateFilter).length > 0) {
+          summaryWhere.createdAt = dateFilter;
+        }
 
-      reportData.summary = {
-        totalUsers,
-        totalVendors,
-        totalProducts,
-        totalOrders,
-        totalRevenue: totalRevenue._sum.totalAmount || 0
-      };
+        const [
+          totalUsers,
+          totalVendors,
+          totalProducts,
+          totalOrders
+        ] = await Promise.all([
+          prisma.user.count({ 
+            where: { 
+              role: 'USER',
+              ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
+            } 
+          }),
+          prisma.vendor.count({ 
+            where: { 
+              isApproved: true,
+              ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
+            } 
+          }),
+          prisma.product.count({ 
+            where: { 
+              isActive: true,
+              ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter })
+            } 
+          }),
+          prisma.order.count({ 
+            where: Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {} 
+          })
+        ]);
+
+        // Calculate total revenue from order items
+        const orderItems = await prisma.orderItem.findMany({
+          where: Object.keys(dateFilter).length > 0 ? {
+            order: {
+              createdAt: dateFilter
+            }
+          } : {},
+          select: {
+            price: true,
+            quantity: true
+          }
+        });
+        
+        const calculatedRevenue = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        reportData.summary = {
+          totalUsers,
+          totalVendors,
+          totalProducts,
+          totalOrders,
+          totalRevenue: calculatedRevenue
+        };
+      } catch (error) {
+        console.error('Error fetching summary:', error);
+      }
+    }
+
+    // If specific type requested, return items array
+    if (reportType && items.length > 0) {
+      reportData.items = items;
     }
 
     res.json({
@@ -988,10 +1180,12 @@ router.get('/reports', async (req, res) => {
     });
   } catch (error) {
     console.error('Get reports error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch reports',
-      error: error.message
+      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     });
   }
 });
