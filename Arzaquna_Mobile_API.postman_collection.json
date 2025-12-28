@@ -1,0 +1,1355 @@
+{
+	"info": {
+		"_postman_id": "arzaquna-mobile-api-v1",
+		"name": "Arzaquna Mobile API",
+		"description": "Complete API collection for Arzaquna Mobile Application. All endpoints are organized by feature.\n\n**Base URL**: `http://localhost:3000/api/mobile`\n\n**Authentication**: Most endpoints require a Bearer token in the Authorization header. Get token from `/api/mobile/auth/login` or `/api/mobile/auth/register`.\n\n**Note**: Replace `{{base_url}}` with your backend URL and `{{token}}` with your authentication token.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "arzaquna-api"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Ahmed Ali\",\n  \"phone\": \"+966501234567\",\n  \"email\": \"ahmed@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "register"]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ahmed@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "login"]
+						},
+						"description": "Login with email and password. Returns user data and JWT token."
+					},
+					"response": []
+				},
+				{
+					"name": "Google Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"google_oauth_token_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/login/google",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "login", "google"]
+						},
+						"description": "Login with Google OAuth (Not implemented yet)"
+					},
+					"response": []
+				},
+				{
+					"name": "Apple Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"apple_oauth_token_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/login/apple",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "login", "apple"]
+						},
+						"description": "Login with Apple OAuth (Not implemented yet)"
+					},
+					"response": []
+				},
+				{
+					"name": "Guest Mode",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/guest",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "guest"]
+						},
+						"description": "Get a guest token for browsing without authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "logout"]
+						},
+						"description": "Logout (client-side token removal)"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration, login, and logout"
+		},
+		{
+			"name": "Home",
+			"item": [
+				{
+					"name": "Get Sliders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/sliders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "sliders"]
+						},
+						"description": "Get active sliders for home screen"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "categories"]
+						},
+						"description": "Get categories for home screen"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Featured Vendors",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/featured-vendors",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "featured-vendors"]
+						},
+						"description": "Get featured vendors for home screen"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Latest Offers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/latest-offers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "latest-offers"]
+						},
+						"description": "Get latest offers/statuses for home screen"
+					},
+					"response": []
+				}
+			],
+			"description": "Home screen data endpoints"
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "categories"]
+						},
+						"description": "Get all active categories"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Vendors by Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/categories/:categoryId/vendors?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "categories", ":categoryId", "vendors"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get vendors in a specific category with pagination"
+					},
+					"response": []
+				}
+			],
+			"description": "Category-related endpoints"
+		},
+		{
+			"name": "Vendors",
+			"item": [
+				{
+					"name": "Search Vendors",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/search?q=store&city=Riyadh&region=Central&categoryId=cat-id&page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "store",
+									"description": "Search query (store name or owner name)"
+								},
+								{
+									"key": "city",
+									"value": "Riyadh",
+									"disabled": true
+								},
+								{
+									"key": "region",
+									"value": "Central",
+									"disabled": true
+								},
+								{
+									"key": "categoryId",
+									"value": "cat-id",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search vendors by name, city, region, or category"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Vendor Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "profile"],
+							"variable": [
+								{
+									"key": "vendorId",
+									"value": "vendor-id-here"
+								}
+							]
+						},
+						"description": "Get complete vendor profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Vendor Products by Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/category/:categoryId/products?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "category", ":categoryId", "products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "vendorId",
+									"value": "vendor-id-here"
+								},
+								{
+									"key": "categoryId",
+									"value": "category-id-here"
+								}
+							]
+						},
+						"description": "Get vendor products filtered by category"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Vendor Statuses/Offers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/statuses?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "statuses"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "vendorId",
+									"value": "vendor-id-here"
+								}
+							]
+						},
+						"description": "Get vendor's statuses/offers"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Vendor Contact Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/contact-info",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "contact-info"],
+							"variable": [
+								{
+									"key": "vendorId",
+									"value": "vendor-id-here"
+								}
+							]
+						},
+						"description": "Get vendor contact information"
+					},
+					"response": []
+				}
+			],
+			"description": "Vendor-related endpoints"
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Search Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/search?q=product&categoryId=cat-id&vendorId=vendor-id&page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "product",
+									"description": "Search query (product name or description)"
+								},
+								{
+									"key": "categoryId",
+									"value": "cat-id",
+									"disabled": true
+								},
+								{
+									"key": "vendorId",
+									"value": "vendor-id",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search products by name, description, category, or vendor"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/:productId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", ":productId"],
+							"variable": [
+								{
+									"key": "productId",
+									"value": "product-id-here"
+								}
+							]
+						},
+						"description": "Get complete product details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Specifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/:productId/specifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", ":productId", "specifications"],
+							"variable": [
+								{
+									"key": "productId",
+									"value": "product-id-here"
+								}
+							]
+						},
+						"description": "Get product specifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Gallery",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/:productId/gallery",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", ":productId", "gallery"],
+							"variable": [
+								{
+									"key": "productId",
+									"value": "product-id-here"
+								}
+							]
+						},
+						"description": "Get product image gallery"
+					},
+					"response": []
+				}
+			],
+			"description": "Product-related endpoints"
+		},
+		{
+			"name": "Statuses/Offers",
+			"item": [
+				{
+					"name": "Get Latest Statuses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/latest?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "latest"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get latest statuses/offers with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Statuses by Vendor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/by-vendor/:vendorId?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "by-vendor", ":vendorId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "vendorId",
+									"value": "vendor-id-here"
+								}
+							]
+						},
+						"description": "Get statuses by specific vendor"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Status (Vendor Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "price",
+									"value": "100.00",
+									"type": "text"
+								},
+								{
+									"key": "productId",
+									"value": "product-id-here",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "icon",
+									"value": "icon-name",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "titleAr",
+									"value": "عنوان بالعربية",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "titleEn",
+									"value": "English Title",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "descriptionAr",
+									"value": "وصف بالعربية",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "descriptionEn",
+									"value": "English Description",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/vendor/statuses",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "vendor", "statuses"]
+						},
+						"description": "Create a new status/offer (Vendor only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Status (Vendor Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/vendor/statuses/:statusId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "vendor", "statuses", ":statusId"],
+							"variable": [
+								{
+									"key": "statusId",
+									"value": "status-id-here"
+								}
+							]
+						},
+						"description": "Delete a status/offer (Vendor only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Status/Offer endpoints"
+		},
+		{
+			"name": "Favorites",
+			"item": [
+				{
+					"name": "Add to Favorites",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": \"product-id-here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/favorites/add",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "favorites", "add"]
+						},
+						"description": "Add a product to favorites"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Favorites",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/favorites?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "favorites"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get user's favorite products with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove from Favorites",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/favorites/:itemId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "favorites", ":itemId"],
+							"variable": [
+								{
+									"key": "itemId",
+									"value": "favorite-item-id-here"
+								}
+							]
+						},
+						"description": "Remove a product from favorites"
+					},
+					"response": []
+				}
+			],
+			"description": "Favorite products endpoints"
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Get User Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders?page=1&limit=20&status=PENDING",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "PENDING",
+									"disabled": true,
+									"description": "Optional: PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED"
+								}
+							]
+						},
+						"description": "Get user orders with optional status filter"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders/:orderId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders", ":orderId"],
+							"variable": [
+								{
+									"key": "orderId",
+									"value": "order-id-here"
+								}
+							]
+						},
+						"description": "Get detailed order information"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vendorId\": \"vendor-id-here\",\n  \"items\": [\n    {\n      \"productId\": \"product-id-1\",\n      \"quantity\": 2\n    },\n    {\n      \"productId\": \"product-id-2\",\n      \"quantity\": 1\n    }\n  ],\n  \"notes\": \"Please deliver in the morning\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders/create",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders", "create"]
+						},
+						"description": "Create a new order"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CANCELLED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders/:orderId/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders", ":orderId", "status"],
+							"variable": [
+								{
+									"key": "orderId",
+									"value": "order-id-here"
+								}
+							]
+						},
+						"description": "Update order status (Users can only cancel their orders)"
+					},
+					"response": []
+				}
+			],
+			"description": "Order management endpoints"
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Get Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/notifications?page=1&limit=20&type=ORDER&isRead=false",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "notifications"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "type",
+									"value": "ORDER",
+									"disabled": true,
+									"description": "Optional: ORDER, OFFER, MESSAGE"
+								},
+								{
+									"key": "isRead",
+									"value": "false",
+									"disabled": true,
+									"description": "Optional: true or false"
+								}
+							]
+						},
+						"description": "Get user notifications with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Notification Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderEnabled\": true,\n  \"offerEnabled\": true,\n  \"messageEnabled\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/notifications/settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "notifications", "settings"]
+						},
+						"description": "Update notification preferences"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/notifications/read/:notificationId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "notifications", "read", ":notificationId"],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "notification-id-here"
+								}
+							]
+						},
+						"description": "Mark a notification as read"
+					},
+					"response": []
+				}
+			],
+			"description": "Notification management endpoints"
+		},
+		{
+			"name": "Messages",
+			"item": [
+				{
+					"name": "Get User Chats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/chats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "chats"]
+						},
+						"description": "Get list of all user conversations"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Chat Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/chats/:chatId/messages?page=1&limit=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "chats", ":chatId", "messages"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "other-user-id-here",
+									"description": "The ID of the other user in the conversation"
+								}
+							]
+						},
+						"description": "Get messages in a specific chat (automatically marks as read)"
+					},
+					"response": []
+				},
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Product Inquiry\",\n  \"contentAr\": \"مرحبا، أريد الاستفسار عن المنتج\",\n  \"contentEn\": \"Hello, I want to inquire about the product\",\n  \"type\": \"INQUIRY\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/chats/:chatId/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "chats", ":chatId", "messages"],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "receiver-user-id-here"
+								}
+							]
+						},
+						"description": "Send a message in a chat"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Support Ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Technical Issue\",\n  \"contentAr\": \"لدي مشكلة تقنية\",\n  \"contentEn\": \"I have a technical issue\",\n  \"type\": \"SUPPORT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/support/ticket",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "support", "ticket"]
+						},
+						"description": "Create a support ticket (sends to admin)"
+					},
+					"response": []
+				}
+			],
+			"description": "Messaging and support endpoints"
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "user", "profile"]
+						},
+						"description": "Get authenticated user profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Ahmed Ali Updated\",\n  \"phone\": \"+966501234568\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "user", "profile"]
+						},
+						"description": "Update user profile information"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"oldpassword123\",\n  \"newPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/user/change-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "user", "change-password"]
+						},
+						"description": "Change user password"
+					},
+					"response": []
+				}
+			],
+			"description": "User profile management endpoints"
+		},
+		{
+			"name": "App Content",
+			"item": [
+				{
+					"name": "Get About App",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/app/about",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "app", "about"]
+						},
+						"description": "Get About App content"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Privacy Policy",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/app/privacy",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "app", "privacy"]
+						},
+						"description": "Get Privacy Policy content"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Terms & Conditions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/app/terms",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "app", "terms"]
+						},
+						"description": "Get Terms & Conditions content"
+					},
+					"response": []
+				}
+			],
+			"description": "App content endpoints (About, Privacy, Terms)"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

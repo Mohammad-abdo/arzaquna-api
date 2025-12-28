@@ -1,0 +1,708 @@
+{
+	"info": {
+		"_postman_id": "arzaquna-mobile-api",
+		"name": "Arzaquna Mobile API",
+		"description": "Complete mobile API collection with granular endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Google Login",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"google-oauth-token\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/login/google",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "login", "google"]
+						}
+					}
+				},
+				{
+					"name": "Apple Login",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"apple-oauth-token\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/login/apple",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "login", "apple"]
+						}
+					}
+				},
+				{
+					"name": "Guest Mode",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/guest",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "guest"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Home Screen",
+			"item": [
+				{
+					"name": "Get Sliders",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/sliders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "sliders"]
+						}
+					}
+				},
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get Featured Vendors",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/featured-vendors",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "featured-vendors"]
+						}
+					}
+				},
+				{
+					"name": "Get Latest Offers",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/home/latest-offers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "home", "latest-offers"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get Vendors in Category",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/categories/:categoryId/vendors?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "categories", ":categoryId", "vendors"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Vendors",
+			"item": [
+				{
+					"name": "Get Vendor Products by Category",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/category/:categoryId/products?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "category", ":categoryId", "products"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Vendor Profile",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Get Vendor Statuses",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/statuses?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "statuses"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Vendor Contact Info",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/:vendorId/contact-info",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", ":vendorId", "contact-info"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Get Product Details",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/:productId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", ":productId"]
+						}
+					}
+				},
+				{
+					"name": "Get Product Specifications",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/:productId/specifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", ":productId", "specifications"]
+						}
+					}
+				},
+				{
+					"name": "Get Product Gallery",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/:productId/gallery",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", ":productId", "gallery"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Statuses & Offers",
+			"item": [
+				{
+					"name": "Get Latest Statuses",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/latest?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "latest"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Statuses by Vendor",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/by-vendor/:vendorId?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "by-vendor", ":vendorId"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Status (Vendor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{"key": "image", "type": "file", "src": []},
+								{"key": "price", "value": "100.00", "type": "text"},
+								{"key": "icon", "value": "", "type": "text"},
+								{"key": "titleAr", "value": "عنوان", "type": "text"},
+								{"key": "titleEn", "value": "Title", "type": "text"},
+								{"key": "descriptionAr", "value": "وصف", "type": "text"},
+								{"key": "descriptionEn", "value": "Description", "type": "text"},
+								{"key": "productId", "value": "", "type": "text"}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/vendor/statuses",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "vendor", "statuses"]
+						}
+					}
+				},
+				{
+					"name": "Delete Status (Vendor)",
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/vendor/statuses/:statusId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "vendor", "statuses", ":statusId"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Favorites",
+			"item": [
+				{
+					"name": "Add to Favorites",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": \"product-id-here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/favorites/add",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "favorites", "add"]
+						}
+					}
+				},
+				{
+					"name": "Get Favorites",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/favorites?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "favorites"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove from Favorites",
+					"request": {
+						"method": "DELETE",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/favorites/:itemId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "favorites", ":itemId"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Get Orders",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders?page=1&limit=20&status=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"},
+								{"key": "status", "value": "", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Order Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders/:orderId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders", ":orderId"]
+						}
+					}
+				},
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vendorId\": \"vendor-id\",\n  \"items\": [\n    {\n      \"productId\": \"product-id\",\n      \"quantity\": 1\n    }\n  ],\n  \"notes\": \"Optional notes\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders/create",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CANCELLED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/orders/:orderId/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "orders", ":orderId", "status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Get Notifications",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/notifications?page=1&limit=20&type=&isRead=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "notifications"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "20"},
+								{"key": "type", "value": "", "disabled": true},
+								{"key": "isRead", "value": "", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Notification Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderEnabled\": true,\n  \"offerEnabled\": true,\n  \"messageEnabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/notifications/settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "notifications", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/notifications/read/:notificationId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "notifications", "read", ":notificationId"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages & Support",
+			"item": [
+				{
+					"name": "Get Chats",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/chats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "chats"]
+						}
+					}
+				},
+				{
+					"name": "Get Chat Messages",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/chats/:chatId/messages?page=1&limit=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "chats", ":chatId", "messages"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "50"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contentAr\": \"رسالة بالعربية\",\n  \"contentEn\": \"Message in English\",\n  \"subject\": \"Optional subject\",\n  \"type\": \"GENERAL\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/chats/:chatId/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "chats", ":chatId", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Create Support Ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Support Request\",\n  \"contentAr\": \"طلب دعم\",\n  \"contentEn\": \"Support request\",\n  \"type\": \"SUPPORT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/messages/support/ticket",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "messages", "support", "ticket"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "user", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Updated Name\",\n  \"phone\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "user", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{token}}"},
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"oldpassword\",\n  \"newPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/user/change-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "user", "change-password"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "App Content",
+			"item": [
+				{
+					"name": "Get About App",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/app/about",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "app", "about"]
+						}
+					}
+				},
+				{
+					"name": "Get Privacy Policy",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/app/privacy",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "app", "privacy"]
+						}
+					}
+				},
+				{
+					"name": "Get Terms & Conditions",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/mobile/app/terms",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "app", "terms"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
+
+

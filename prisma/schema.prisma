@@ -1,0 +1,365 @@
+// Prisma Schema for Arzaquna
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id        String   @id @default(uuid())
+  fullName  String
+  phone     String   @unique
+  email     String   @unique
+  password  String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  isGuest   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // OAuth fields
+  googleId String? @unique
+  appleId  String? @unique
+
+  // Relations
+  vendorProfile      Vendor?
+  orders             Order[]
+  favorites          Favorite[]
+  notifications      Notification[]
+  sentMessages       Message[]           @relation("SenderMessages")
+  receivedMessages   Message[]           @relation("ReceiverMessages")
+  vendorApplications VendorApplication[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+enum UserRole {
+  USER
+  VENDOR
+  ADMIN
+}
+
+// Vendor Model
+model Vendor {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  storeName         String
+  specialization    Json // Array of category IDs stored as JSON
+  city              String
+  region            String
+  yearsOfExperience Int
+  whatsappNumber    String
+  callNumber        String
+  isApproved        Boolean   @default(false)
+  approvedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products   Product[]
+  statuses   Status[]
+  categories VendorCategory[]
+  orders     Order[]
+
+  @@index([isApproved])
+}
+
+// Vendor Application
+model VendorApplication {
+  id                String            @id @default(uuid())
+  userId            String
+  fullName          String
+  phone             String
+  email             String
+  storeName         String
+  specialization    Json // Array of category IDs stored as JSON
+  city              String
+  region            String
+  yearsOfExperience Int
+  status            ApplicationStatus @default(PENDING)
+  reviewedBy        String? // Admin ID
+  reviewedAt        DateTime?
+  rejectionReason   String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Category Model
+model Category {
+  id        String   @id @default(uuid())
+  nameAr    String
+  nameEn    String
+  icon      String?
+  image     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  vendors  VendorCategory[]
+  products Product[]
+
+  @@index([isActive])
+}
+
+// Vendor-Category Relationship
+model VendorCategory {
+  id         String   @id @default(uuid())
+  vendorId   String
+  categoryId String
+  createdAt  DateTime @default(now())
+
+  vendor   Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, categoryId])
+  @@index([vendorId])
+  @@index([categoryId])
+}
+
+// Product Model
+model Product {
+  id            String    @id @default(uuid())
+  vendorId      String
+  categoryId    String
+  nameAr        String
+  nameEn        String
+  age           String?
+  weight        String?
+  descriptionAr String?
+  descriptionEn String?
+  price         Float
+  images        Json // Array of image URLs stored as JSON
+  isActive      Boolean   @default(true)
+  isApproved    Boolean   @default(false)
+  approvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  vendor         Vendor                 @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category       Category               @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  specifications ProductSpecification[]
+  favorites      Favorite[]
+  orderItems     OrderItem[]
+  statuses       Status[]
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([isApproved])
+}
+
+// Product Specifications (varies by category)
+model ProductSpecification {
+  id        String   @id @default(uuid())
+  productId String
+  key       String // e.g., "healthStatus", "vaccinations", "guarantee"
+  valueAr   String?
+  valueEn   String?
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// Status/Offer Model
+model Status {
+  id            String   @id @default(uuid())
+  vendorId      String
+  productId     String? // Related product/offer ID
+  image         String
+  price         Float
+  icon          String?
+  titleAr       String?
+  titleEn       String?
+  descriptionAr String?
+  descriptionEn String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  vendor  Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([vendorId])
+  @@index([isActive])
+}
+
+// Slider/Banner Model
+model Slider {
+  id            String   @id @default(uuid())
+  image         String
+  titleAr       String
+  titleEn       String
+  descriptionAr String?
+  descriptionEn String?
+  icon          String?
+  link          String?
+  order         Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}
+
+// Order Model
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  vendorId  String
+  status    OrderStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor Vendor      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  items  OrderItem[]
+
+  @@index([userId])
+  @@index([vendorId])
+  @@index([status])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Order Item
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int      @default(1)
+  price     Float
+  createdAt DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// Favorite Model
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+// Notification Model
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  titleAr   String
+  titleEn   String
+  messageAr String
+  messageEn String
+  data      String? // JSON string for additional data
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+}
+
+enum NotificationType {
+  ORDER
+  OFFER
+  MESSAGE
+}
+
+// Notification Settings
+model NotificationSettings {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  orderEnabled   Boolean  @default(true)
+  offerEnabled   Boolean  @default(true)
+  messageEnabled Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Message Model
+model Message {
+  id         String      @id @default(uuid())
+  senderId   String
+  receiverId String
+  subject    String?
+  contentAr  String
+  contentEn  String
+  type       MessageType @default(SUPPORT)
+  isRead     Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+
+  sender   User @relation("SenderMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceiverMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([isRead])
+  @@index([type])
+}
+
+enum MessageType {
+  SUPPORT
+  COMPLAINT
+  INQUIRY
+  GENERAL
+}
+
+// App Content (About, Privacy, Terms)
+model AppContent {
+  id        String      @id @default(uuid())
+  type      ContentType @unique
+  contentAr String      @db.Text
+  contentEn String      @db.Text
+  updatedAt DateTime    @updatedAt
+  updatedBy String? // Admin ID
+}
+
+enum ContentType {
+  ABOUT
+  PRIVACY_POLICY
+  TERMS_CONDITIONS
+}
