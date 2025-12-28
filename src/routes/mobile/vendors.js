@@ -1,4 +1,6 @@
 const express = require('express');
+const { body, validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
 const prisma = require('../../config/database');
 const { optionalAuth, authenticate, isVendor } = require('../../middleware/auth');
 const upload = require('../../utils/upload');
@@ -441,6 +443,81 @@ router.get('/:vendorId/contact-info', optionalAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch contact info'
+    });
+  }
+});
+
+// Delete vendor account (vendor can delete their own account)
+router.delete('/account', authenticate, isVendor, [
+  body('password').notEmpty().withMessage('Password is required for account deletion')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { password } = req.body;
+
+    // Get user with vendor profile
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        vendorProfile: {
+          select: { id: true }
+        }
+      },
+      select: {
+        id: true,
+        password: true,
+        vendorProfile: {
+          select: { id: true }
+        }
+      }
+    });
+
+    if (!user || !user.vendorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendor account not found'
+      });
+    }
+
+    // Verify password
+    if (user.password) {
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({
+          success: false,
+          message: 'Incorrect password. Account deletion requires password confirmation.'
+        });
+      }
+    }
+
+    // Delete vendor profile first (cascade will handle products, statuses, etc.)
+    await prisma.vendor.delete({
+      where: { id: user.vendorProfile.id }
+    });
+
+    // Update user role back to USER (don't delete user, just remove vendor status)
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { role: 'USER' }
+    });
+
+    res.json({
+      success: true,
+      message: 'Vendor account deleted successfully. Your user account remains active.'
+    });
+  } catch (error) {
+    console.error('Delete vendor account error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete vendor account',
+      error: error.message
     });
   }
 });

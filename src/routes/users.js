@@ -171,6 +171,53 @@ router.get('/', authenticate, authorize('ADMIN'), async (req, res) => {
   }
 });
 
+// Get user by ID (Admin only)
+router.get('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        vendorProfile: {
+          select: {
+            id: true,
+            storeName: true,
+            isApproved: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user',
+      error: error.message
+    });
+  }
+});
+
 // Update user status (Admin only)
 router.put('/:id/status', authenticate, authorize('ADMIN'), async (req, res) => {
   try {

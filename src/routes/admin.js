@@ -362,6 +362,186 @@ router.get('/messages', async (req, res) => {
   }
 });
 
+// Get all users (Admin)
+router.get('/users', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, role, search, isActive } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where = {};
+    if (role) where.role = role;
+    if (isActive !== undefined) where.isActive = isActive === 'true' || isActive === true;
+    if (search) {
+      where.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search } }
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          vendorProfile: {
+            select: {
+              id: true,
+              isApproved: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        users,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users',
+      error: error.message
+    });
+  }
+});
+
+// Get user by ID (Admin)
+router.get('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        vendorProfile: {
+          select: {
+            id: true,
+            storeName: true,
+            isApproved: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user',
+      error: error.message
+    });
+  }
+});
+
+// Block user (Admin)
+router.put('/users/:id/block', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (id === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot block your own account'
+      });
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { isActive: false },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        isActive: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'User blocked successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Block user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to block user',
+      error: error.message
+    });
+  }
+});
+
+// Unblock user (Admin)
+router.put('/users/:id/unblock', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { isActive: true },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        isActive: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'User unblocked successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Unblock user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to unblock user',
+      error: error.message
+    });
+  }
+});
+
 // Delete user (Admin)
 router.delete('/users/:id', async (req, res) => {
   try {
@@ -501,7 +681,104 @@ router.post('/users', [
   }
 });
 
-// Update user role (Admin)
+// Update user (Admin) - Full update
+router.put('/users/:id', [
+  body('fullName').optional().trim().notEmpty().withMessage('Full name cannot be empty'),
+  body('email').optional().isEmail().withMessage('Valid email is required'),
+  body('phone').optional().trim().notEmpty().withMessage('Phone cannot be empty'),
+  body('role').optional().isIn(['ADMIN', 'USER', 'VENDOR']).withMessage('Invalid role'),
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { id } = req.params;
+    const { fullName, email, phone, role, isActive, password } = req.body;
+
+    if (id === req.user.id && (role || isActive === false)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot change your own role or deactivate your own account'
+      });
+    }
+
+    const updateData = {};
+    if (fullName) updateData.fullName = fullName;
+    if (email) {
+      // Check if email is already taken
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email,
+          id: { not: id }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already in use'
+        });
+      }
+      updateData.email = email;
+    }
+    if (phone) {
+      // Check if phone is already taken
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          phone,
+          id: { not: id }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number already in use'
+        });
+      }
+      updateData.phone = phone;
+    }
+    if (role) updateData.role = role;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (password) {
+      const bcrypt = require('bcryptjs');
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update user',
+      error: error.message
+    });
+  }
+});
+
+// Update user role (Admin) - Keep for backward compatibility
 router.put('/users/:id/role', [
   body('role').isIn(['ADMIN', 'USER', 'VENDOR']).withMessage('Invalid role')
 ], async (req, res) => {

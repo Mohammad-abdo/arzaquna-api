@@ -170,6 +170,78 @@ router.put('/change-password', authenticate, [
   }
 });
 
+// Delete user account
+router.delete('/account', authenticate, [
+  body('password').notEmpty().withMessage('Password is required for account deletion')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { password } = req.body;
+
+    // Verify password
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { 
+        id: true,
+        password: true,
+        role: true,
+        vendorProfile: {
+          select: { id: true }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // For OAuth users (no password), allow deletion without password verification
+    if (user.password) {
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({
+          success: false,
+          message: 'Incorrect password. Account deletion requires password confirmation.'
+        });
+      }
+    }
+
+    // If user is a vendor, delete vendor profile first (cascade will handle related data)
+    if (user.vendorProfile) {
+      await prisma.vendor.delete({
+        where: { id: user.vendorProfile.id }
+      });
+    }
+
+    // Delete user (cascade will handle related data: orders, favorites, notifications, messages)
+    await prisma.user.delete({
+      where: { id: req.user.id }
+    });
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete account',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
 
 

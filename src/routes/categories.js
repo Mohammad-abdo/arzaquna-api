@@ -71,11 +71,22 @@ router.get('/:id', optionalAuth, async (req, res) => {
       }
     });
 
-    if (!category || !category.isActive) {
+    if (!category) {
       return res.status(404).json({
         success: false,
         message: 'Category not found'
       });
+    }
+
+    // Only check isActive for non-authenticated users or non-admins
+    // Admins should be able to see inactive categories for editing
+    if (!req.user || req.user.role !== 'ADMIN') {
+      if (!category.isActive) {
+        return res.status(404).json({
+          success: false,
+          message: 'Category not found'
+        });
+      }
     }
 
     res.json({
