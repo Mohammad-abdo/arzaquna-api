@@ -1,7 +1,7 @@
 const express = require('express');
 const prisma = require('../../config/database');
 const { authenticate } = require('../../middleware/auth');
-const { ensureImagesArray } = require('../../utils/jsonHelper');
+const { ensureImagesArray, getImageUrl, getImageUrls } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -80,7 +80,7 @@ router.post('/add', authenticate, [
           name_ar: favorite.product.nameAr,
           name_en: favorite.product.nameEn,
           price: favorite.product.price,
-          image: ensureImagesArray(favorite.product.images)[0] || null,
+          image: getImageUrl(ensureImagesArray(favorite.product.images)[0] || null),
           vendor_name: favorite.product.vendor.storeName
         },
         created_at: favorite.createdAt
@@ -156,7 +156,7 @@ router.get('/', authenticate, async (req, res) => {
             name_ar: fav.product.nameAr,
             name_en: fav.product.nameEn,
             price: fav.product.price,
-            images: ensureImagesArray(fav.product.images),
+            images: getImageUrls(fav.product.images),
             age: fav.product.age,
             weight: fav.product.weight,
             category: {

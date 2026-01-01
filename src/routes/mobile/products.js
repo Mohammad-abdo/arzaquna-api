@@ -1,7 +1,7 @@
 const express = require('express');
 const prisma = require('../../config/database');
 const { optionalAuth } = require('../../middleware/auth');
-const { ensureImagesArray } = require('../../utils/jsonHelper');
+const { ensureImagesArray, getImageUrls } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -77,7 +77,7 @@ router.get('/search', optionalAuth, async (req, res) => {
           age: product.age,
           weight: product.weight,
           price: product.price,
-          images: ensureImagesArray(product.images),
+          images: getImageUrls(product.images),
           description_ar: product.descriptionAr,
           description_en: product.descriptionEn,
           category: {
@@ -281,7 +281,7 @@ router.get('/:productId/gallery', optionalAuth, async (req, res) => {
         product_id: productId,
         product_name_ar: product.nameAr,
         product_name_en: product.nameEn,
-        images: product.images
+        images: getImageUrls(product.images)
       }
     });
   } catch (error) {

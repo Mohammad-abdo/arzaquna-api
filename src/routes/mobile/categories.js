@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../../config/database');
 const { optionalAuth } = require('../../middleware/auth');
+const { getImageUrl } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -31,7 +32,7 @@ router.get('/', optionalAuth, async (req, res) => {
         name_ar: cat.nameAr,
         name_en: cat.nameEn,
         icon: cat.icon,
-        image: cat.image,
+        image: getImageUrl(cat.image),
         vendor_count: cat._count.vendors
       }))
     });

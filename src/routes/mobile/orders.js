@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const prisma = require('../../config/database');
 const { authenticate } = require('../../middleware/auth');
-const { ensureImagesArray } = require('../../utils/jsonHelper');
+const { ensureImagesArray, getImageUrl, getImageUrls } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -81,7 +81,7 @@ router.get('/', authenticate, async (req, res) => {
               id: item.product.id,
               name_ar: item.product.nameAr,
               name_en: item.product.nameEn,
-              image: ensureImagesArray(item.product.images)[0] || null
+              image: getImageUrl(ensureImagesArray(item.product.images)[0] || null)
             }
           })),
           total_amount: order.items.reduce((sum, item) => sum + (item.quantity * item.price), 0),
@@ -214,7 +214,7 @@ router.get('/:orderId', authenticate, async (req, res) => {
             id: item.product.id,
             name_ar: item.product.nameAr,
             name_en: item.product.nameEn,
-            images: ensureImagesArray(item.product.images),
+            images: getImageUrls(item.product.images),
             age: item.product.age,
             weight: item.product.weight,
             category: {

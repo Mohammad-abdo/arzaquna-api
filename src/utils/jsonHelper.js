@@ -41,10 +41,45 @@ const ensureSpecializationArray = (specialization) => {
   return ensureArray(specialization);
 };
 
+/**
+ * Get full image URL from relative path
+ * @param {string|null|undefined} imagePath - Relative image path (e.g., /uploads/products/image.png)
+ * @returns {string|null} Full image URL or null if no path
+ */
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  
+  // If already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Get backend URL from environment or use production URL
+  const backendUrl = process.env.BACKEND_URL || process.env.API_URL || 'https://arzaquna.developteam.site';
+  
+  // Ensure path starts with /
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  
+  // Return full URL
+  return `${backendUrl}${cleanPath}`;
+};
+
+/**
+ * Convert array of image paths to full URLs
+ * @param {Array<string>|string|null} images - Array of image paths or JSON string
+ * @returns {Array<string>} Array of full image URLs
+ */
+const getImageUrls = (images) => {
+  const imageArray = ensureImagesArray(images);
+  return imageArray.map(img => getImageUrl(img)).filter(Boolean);
+};
+
 module.exports = {
   ensureArray,
   ensureImagesArray,
-  ensureSpecializationArray
+  ensureSpecializationArray,
+  getImageUrl,
+  getImageUrls
 };
 
 

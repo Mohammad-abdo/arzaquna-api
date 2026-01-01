@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../../config/database');
 const { optionalAuth, authenticate, isVendor } = require('../../middleware/auth');
 const upload = require('../../utils/upload');
-const { ensureImagesArray } = require('../../utils/jsonHelper');
+const { ensureImagesArray, getImageUrl, getImageUrls } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -197,7 +197,7 @@ router.get('/:vendorId/category/:categoryId/products', optionalAuth, async (req,
           age: product.age,
           weight: product.weight,
           price: product.price,
-          images: ensureImagesArray(product.images),
+          images: getImageUrls(product.images),
           description_ar: product.descriptionAr,
           description_en: product.descriptionEn,
           specifications: product.specifications.map(spec => ({
@@ -368,7 +368,7 @@ router.get('/:vendorId/statuses', optionalAuth, async (req, res) => {
         vendor_id: vendorId,
         statuses: statuses.map(status => ({
           id: status.id,
-          image: status.image,
+          image: getImageUrl(status.image),
           price: status.price,
           icon: status.icon,
           title_ar: status.titleAr,

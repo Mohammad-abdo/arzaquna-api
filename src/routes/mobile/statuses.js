@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const prisma = require('../../config/database');
 const { optionalAuth, authenticate, isVendor } = require('../../middleware/auth');
 const upload = require('../../utils/upload');
+const { getImageUrl } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -52,7 +53,7 @@ router.get('/latest', optionalAuth, async (req, res) => {
       data: {
         statuses: statuses.map(status => ({
           id: status.id,
-          image: status.image,
+          image: getImageUrl(status.image),
           price: status.price,
           icon: status.icon,
           title_ar: status.titleAr,
@@ -127,7 +128,7 @@ router.get('/by-vendor/:vendorId', optionalAuth, async (req, res) => {
         vendor_id: vendorId,
         statuses: statuses.map(status => ({
           id: status.id,
-          image: status.image,
+          image: getImageUrl(status.image),
           price: status.price,
           icon: status.icon,
           title_ar: status.titleAr,
@@ -210,7 +211,7 @@ router.post('/vendor/statuses', authenticate, isVendor, upload.single('image'), 
       success: true,
       data: {
         id: status.id,
-        image: status.image,
+        image: getImageUrl(status.image),
         price: status.price,
         icon: status.icon,
         title_ar: status.titleAr,

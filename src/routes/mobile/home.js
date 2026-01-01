@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../../config/database');
 const { optionalAuth } = require('../../middleware/auth');
+const { getImageUrl } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.get('/sliders', optionalAuth, async (req, res) => {
       success: true,
       data: sliders.map(slider => ({
         id: slider.id,
-        image: slider.image,
+        image: getImageUrl(slider.image),
         title_ar: slider.titleAr,
         title_en: slider.titleEn,
         description_ar: slider.descriptionAr,
@@ -74,7 +75,7 @@ router.get('/categories', optionalAuth, async (req, res) => {
         name_ar: cat.nameAr,
         name_en: cat.nameEn,
         icon: cat.icon,
-        image: cat.image,
+        image: getImageUrl(cat.image),
         vendor_count: cat._count.vendors
       }))
     });
@@ -171,7 +172,7 @@ router.get('/latest-offers', optionalAuth, async (req, res) => {
       success: true,
       data: statuses.map(status => ({
         id: status.id,
-        image: status.image,
+        image: getImageUrl(status.image),
         price: status.price,
         icon: status.icon,
         title_ar: status.titleAr,
