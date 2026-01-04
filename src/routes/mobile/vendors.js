@@ -239,6 +239,7 @@ router.get('/:vendorId/profile', optionalAuth, async (req, res) => {
         yearsOfExperience: true,
         whatsappNumber: true,
         callNumber: true,
+        isApproved: true,
         createdAt: true,
         user: {
           select: {
@@ -407,6 +408,7 @@ router.get('/:vendorId/contact-info', optionalAuth, async (req, res) => {
         storeName: true,
         whatsappNumber: true,
         callNumber: true,
+        isApproved: true,
         user: {
           select: {
             fullName: true,

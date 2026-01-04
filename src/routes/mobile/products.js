@@ -126,6 +126,8 @@ router.get('/:productId', optionalAuth, async (req, res) => {
         images: true,
         descriptionAr: true,
         descriptionEn: true,
+        isActive: true,
+        isApproved: true,
         createdAt: true,
         category: {
           select: {
@@ -151,7 +153,7 @@ router.get('/:productId', optionalAuth, async (req, res) => {
       }
     });
 
-    if (!product || !product.isActive) {
+    if (!product || !product.isActive || !product.isApproved) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
