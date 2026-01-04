@@ -21,7 +21,7 @@ router.get('/dashboard/stats', async (req, res) => {
       pendingProducts,
       totalOrders,
       totalCategories,
-      totalRevenue
+      orderItems
     ] = await Promise.all([
       prisma.user.count({ where: { role: 'USER' } }),
       prisma.vendor.count({ where: { isApproved: true } }),
@@ -30,12 +30,16 @@ router.get('/dashboard/stats', async (req, res) => {
       prisma.product.count({ where: { isApproved: false, isActive: true } }),
       prisma.order.count(),
       prisma.category.count({ where: { isActive: true } }),
-      prisma.order.aggregate({
-        _sum: {
-          totalAmount: true
+      prisma.orderItem.findMany({
+        select: {
+          price: true,
+          quantity: true
         }
       })
     ]);
+
+    // Calculate total revenue from order items
+    const totalRevenue = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     res.json({
       success: true,
@@ -47,7 +51,7 @@ router.get('/dashboard/stats', async (req, res) => {
         pendingProducts,
         totalOrders,
         totalCategories,
-        totalRevenue: totalRevenue._sum.totalAmount || 0
+        totalRevenue
       }
     });
   } catch (error) {
@@ -74,8 +78,8 @@ router.get('/dashboard/charts', async (req, res) => {
         }
       },
       select: {
+        id: true,
         createdAt: true,
-        totalAmount: true,
         items: {
           select: {
             quantity: true,
@@ -94,7 +98,10 @@ router.get('/dashboard/charts', async (req, res) => {
         ordersByMonth[month] = { orders: 0, revenue: 0 };
       }
       ordersByMonth[month].orders += 1;
-      ordersByMonth[month].revenue += order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      // Calculate revenue from order items
+      if (order.items && order.items.length > 0) {
+        ordersByMonth[month].revenue += order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      }
     });
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];

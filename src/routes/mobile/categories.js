@@ -45,7 +45,7 @@ router.get('/', optionalAuth, async (req, res) => {
   }
 });
 
-// Get vendors in a specific category
+// Get vendors in a specific category (with pagination) - Must be before /:id route
 router.get('/:categoryId/vendors', optionalAuth, async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -152,6 +152,121 @@ router.get('/:categoryId/vendors', optionalAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch vendors'
+    });
+  }
+});
+
+// Get single category with all vendors
+router.get('/:id', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get category with all vendors
+    const category = await prisma.category.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nameAr: true,
+        nameEn: true,
+        icon: true,
+        image: true,
+        isActive: true
+      }
+    });
+
+    if (!category || !category.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found'
+      });
+    }
+
+    // Get all vendors in this category
+    const vendors = await prisma.vendor.findMany({
+      where: {
+        isApproved: true,
+        categories: {
+          some: {
+            categoryId: id
+          }
+        }
+      },
+      select: {
+        id: true,
+        storeName: true,
+        city: true,
+        region: true,
+        yearsOfExperience: true,
+        whatsappNumber: true,
+        callNumber: true,
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            email: true
+          }
+        },
+        _count: {
+          select: {
+            products: {
+              where: {
+                categoryId: id,
+                isActive: true,
+                isApproved: true
+              }
+            },
+            statuses: {
+              where: {
+                isActive: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        id: category.id,
+        name_ar: category.nameAr,
+        name_en: category.nameEn,
+        icon: category.icon,
+        image: getImageUrl(category.image),
+        vendors: vendors.map(vendor => ({
+          id: vendor.id,
+          store_name: vendor.storeName,
+          owner: {
+            id: vendor.user.id,
+            full_name: vendor.user.fullName,
+            phone: vendor.user.phone,
+            email: vendor.user.email
+          },
+          location: {
+            city: vendor.city,
+            region: vendor.region
+          },
+          years_experience: vendor.yearsOfExperience,
+          contact: {
+            whatsapp: vendor.whatsappNumber,
+            call: vendor.callNumber
+          },
+          stats: {
+            products_count: vendor._count.products,
+            offers_count: vendor._count.statuses
+          },
+          created_at: vendor.createdAt
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Get category error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch category'
     });
   }
 });
