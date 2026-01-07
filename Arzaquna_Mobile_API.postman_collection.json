@@ -355,7 +355,7 @@
 								}
 							]
 						},
-						"description": "Get complete vendor profile information"
+						"description": "Get complete vendor profile information. Returns owner profile_image in owner object."
 					},
 					"response": []
 				},
@@ -458,6 +458,33 @@
 							]
 						},
 						"description": "Get vendor contact information"
+					},
+					"response": []
+				},
+				{
+					"name": "Vendor Registration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Ahmed Ali\",\n  \"phone\": \"+966501234567\",\n  \"email\": \"vendor@example.com\",\n  \"password\": \"password123\",\n  \"repeatPassword\": \"password123\",\n  \"shop_or_farm_name\": \"My Farm Store\",\n  \"categories\": [\"category-id-1\", \"category-id-2\"],\n  \"locationText\": \"Riyadh, Central Region\",\n  \"experienceYears\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", "register"]
+						},
+						"description": "Register as a vendor. Creates a vendor application that will be reviewed. Updates user info and creates application with categories, location, and experience. Location text format: 'City, Region' or just 'City'."
 					},
 					"response": []
 				}
@@ -733,6 +760,86 @@
 					"response": []
 				},
 				{
+					"name": "Update Status (Vendor Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": [],
+									"description": "Optional: New image file"
+								},
+								{
+									"key": "price",
+									"value": "150.00",
+									"type": "text",
+									"disabled": true,
+									"description": "Optional: Updated price"
+								},
+								{
+									"key": "productId",
+									"value": "product-id-here",
+									"type": "text",
+									"disabled": true,
+									"description": "Optional: Related product ID"
+								},
+								{
+									"key": "icon",
+									"value": "icon-name",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "titleAr",
+									"value": "عنوان محدث",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "titleEn",
+									"value": "Updated Title",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "descriptionAr",
+									"value": "وصف محدث",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "descriptionEn",
+									"value": "Updated Description",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mobile/statuses/vendor/statuses/:statusId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "statuses", "vendor", "statuses", ":statusId"],
+							"variable": [
+								{
+									"key": "statusId",
+									"value": "status-id-here"
+								}
+							]
+						},
+						"description": "Update a status/offer (Vendor only). All fields are optional. Only include fields you want to update."
+					},
+					"response": []
+				},
+				{
 					"name": "Delete Status (Vendor Only)",
 					"request": {
 						"method": "DELETE",
@@ -764,7 +871,7 @@
 			"name": "Favorites",
 			"item": [
 				{
-					"name": "Add to Favorites",
+					"name": "Toggle Favorite",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -782,11 +889,11 @@
 							"raw": "{\n  \"productId\": \"product-id-here\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/mobile/favorites/add",
+							"raw": "{{base_url}}/api/mobile/favorites/toggle",
 							"host": ["{{base_url}}"],
-							"path": ["api", "mobile", "favorites", "add"]
+							"path": ["api", "mobile", "favorites", "toggle"]
 						},
-						"description": "Add a product to favorites"
+						"description": "Toggle favorite status for a product. Adds if not favorited, removes if already favorited. Returns is_favorited boolean."
 					},
 					"response": []
 				},
@@ -1211,7 +1318,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "mobile", "user", "profile"]
 						},
-						"description": "Get authenticated user profile"
+						"description": "Get authenticated user profile. Returns user data including profile_image URL."
 					},
 					"response": []
 				},
@@ -1223,22 +1330,42 @@
 							{
 								"key": "Authorization",
 								"value": "Bearer {{token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
 							}
 						],
 						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"Ahmed Ali Updated\",\n  \"phone\": \"+966501234568\"\n}"
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fullName",
+									"value": "Ahmed Ali Updated",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "+966501234568",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "newpassword123",
+									"type": "text",
+									"disabled": true,
+									"description": "Optional: New password (min 6 characters)"
+								},
+								{
+									"key": "profileImage",
+									"type": "file",
+									"src": [],
+									"description": "Optional: Profile image file (JPG, PNG, GIF, max 5MB)"
+								}
+							]
 						},
 						"url": {
 							"raw": "{{base_url}}/api/mobile/user/profile",
 							"host": ["{{base_url}}"],
 							"path": ["api", "mobile", "user", "profile"]
 						},
-						"description": "Update user profile information"
+						"description": "Update user profile information including name, phone, password, and profile image. All fields are optional. Returns updated profile with profile_image URL."
 					},
 					"response": []
 				},

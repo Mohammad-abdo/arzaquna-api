@@ -2,6 +2,8 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const prisma = require('../config/database');
 const { authenticate, authorize } = require('../middleware/auth');
+const upload = require('../utils/upload');
+const { getImageUrl } = require('../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -35,7 +37,10 @@ router.get('/profile', authenticate, async (req, res) => {
 
     res.json({
       success: true,
-      data: user
+      data: {
+        ...user,
+        profileImage: getImageUrl(user.profileImage)
+      }
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -48,9 +53,10 @@ router.get('/profile', authenticate, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', authenticate, [
+router.put('/profile', authenticate, upload.single('profileImage'), [
   body('fullName').optional().trim().notEmpty().withMessage('Full name cannot be empty'),
-  body('phone').optional().trim().notEmpty().withMessage('Phone cannot be empty')
+  body('phone').optional().trim().notEmpty().withMessage('Phone cannot be empty'),
+  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -61,8 +67,9 @@ router.put('/profile', authenticate, [
       });
     }
 
-    const { fullName, phone } = req.body;
+    const { fullName, phone, password } = req.body;
     const updateData = {};
+    const bcrypt = require('bcryptjs');
 
     if (fullName) updateData.fullName = fullName;
     if (phone) {
@@ -83,6 +90,17 @@ router.put('/profile', authenticate, [
       updateData.phone = phone;
     }
 
+    // Handle password update
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateData.password = hashedPassword;
+    }
+
+    // Handle profile image upload
+    if (req.file) {
+      updateData.profileImage = `/uploads/general/${req.file.filename}`;
+    }
+
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data: updateData,
@@ -91,6 +109,7 @@ router.put('/profile', authenticate, [
         fullName: true,
         email: true,
         phone: true,
+        profileImage: true,
         role: true
       }
     });
@@ -98,7 +117,10 @@ router.put('/profile', authenticate, [
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: user
+      data: {
+        ...user,
+        profileImage: getImageUrl(user.profileImage)
+      }
     });
   } catch (error) {
     console.error('Update profile error:', error);
