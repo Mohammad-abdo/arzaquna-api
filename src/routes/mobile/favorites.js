@@ -5,8 +5,8 @@ const { ensureImagesArray, getImageUrl, getImageUrls } = require('../../utils/js
 
 const router = express.Router();
 
-// Add to favorites
-router.post('/add', authenticate, [
+// Toggle favorite (add if not exists, remove if exists)
+router.post('/toggle', authenticate, [
   require('express-validator').body('productId').notEmpty().withMessage('Product ID is required')
 ], async (req, res) => {
   try {
@@ -42,55 +42,66 @@ router.post('/add', authenticate, [
     });
 
     if (existingFavorite) {
-      return res.status(400).json({
-        success: false,
-        message: 'Product already in favorites'
+      // Remove from favorites
+      await prisma.favorite.delete({
+        where: { id: existingFavorite.id }
       });
-    }
 
-    const favorite = await prisma.favorite.create({
-      data: {
-        userId: req.user.id,
-        productId
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            nameAr: true,
-            nameEn: true,
-            price: true,
-            images: true,
-            vendor: {
-              select: {
-                storeName: true
+      return res.json({
+        success: true,
+        data: {
+          is_favorited: false,
+          message: 'Product removed from favorites'
+        }
+      });
+    } else {
+      // Add to favorites
+      const favorite = await prisma.favorite.create({
+        data: {
+          userId: req.user.id,
+          productId
+        },
+        include: {
+          product: {
+            select: {
+              id: true,
+              nameAr: true,
+              nameEn: true,
+              price: true,
+              images: true,
+              vendor: {
+                select: {
+                  storeName: true
+                }
               }
             }
           }
         }
-      }
-    });
+      });
 
-    res.status(201).json({
-      success: true,
-      data: {
-        id: favorite.id,
-        product: {
-          id: favorite.product.id,
-          name_ar: favorite.product.nameAr,
-          name_en: favorite.product.nameEn,
-          price: favorite.product.price,
-          image: getImageUrl(ensureImagesArray(favorite.product.images)[0] || null),
-          vendor_name: favorite.product.vendor.storeName
-        },
-        created_at: favorite.createdAt
-      }
-    });
+      return res.status(201).json({
+        success: true,
+        data: {
+          is_favorited: true,
+          id: favorite.id,
+          product: {
+            id: favorite.product.id,
+            name_ar: favorite.product.nameAr,
+            name_en: favorite.product.nameEn,
+            price: favorite.product.price,
+            image: getImageUrl(ensureImagesArray(favorite.product.images)[0] || null),
+            vendor_name: favorite.product.vendor.storeName
+          },
+          created_at: favorite.createdAt,
+          message: 'Product added to favorites'
+        }
+      });
+    }
   } catch (error) {
-    console.error('Add favorite error:', error);
+    console.error('Toggle favorite error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to add favorite'
+      message: 'Failed to toggle favorite'
     });
   }
 });

@@ -8,6 +8,162 @@ const { ensureImagesArray, getImageUrl, getImageUrls } = require('../../utils/js
 
 const router = express.Router();
 
+// Vendor registration
+router.post('/register', authenticate, [
+  body('fullName').trim().notEmpty().withMessage('Full name is required'),
+  body('phone').trim().notEmpty().withMessage('Phone is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('repeatPassword').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Passwords do not match');
+    }
+    return true;
+  }),
+  body('shop_or_farm_name').trim().notEmpty().withMessage('Shop or farm name is required'),
+  body('categories').isArray().notEmpty().withMessage('Categories are required'),
+  body('locationText').trim().notEmpty().withMessage('Location text is required'),
+  body('experienceYears').isInt({ min: 0 }).withMessage('Experience years must be a valid number')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const {
+      fullName,
+      phone,
+      email,
+      password,
+      shop_or_farm_name,
+      categories,
+      locationText,
+      experienceYears
+    } = req.body;
+
+    // Check if user already has a vendor profile or pending application
+    const existingVendor = await prisma.vendor.findUnique({
+      where: { userId: req.user.id }
+    });
+
+    if (existingVendor) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already a vendor'
+      });
+    }
+
+    const existingApplication = await prisma.vendorApplication.findFirst({
+      where: {
+        userId: req.user.id,
+        status: { in: ['PENDING', 'APPROVED'] }
+      }
+    });
+
+    if (existingApplication) {
+      return res.status(400).json({
+        success: false,
+        message: 'You already have a pending or approved vendor application'
+      });
+    }
+
+    // Check if email or phone is already in use by another user
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { phone }],
+        id: { not: req.user.id }
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email or phone already in use'
+      });
+    }
+
+    // Verify categories exist
+    const categoryIds = Array.isArray(categories) ? categories : [];
+    const validCategories = await prisma.category.findMany({
+      where: {
+        id: { in: categoryIds },
+        isActive: true
+      }
+    });
+
+    if (validCategories.length !== categoryIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'One or more categories are invalid'
+      });
+    }
+
+    // Parse location text (assuming format: "City, Region" or just "City")
+    const locationParts = locationText.split(',').map(part => part.trim());
+    const city = locationParts[0] || locationText;
+    const region = locationParts[1] || locationText;
+
+    // Update user information
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        fullName,
+        phone,
+        email,
+        password: hashedPassword
+      }
+    });
+
+    // Create vendor application
+    const application = await prisma.vendorApplication.create({
+      data: {
+        userId: req.user.id,
+        fullName,
+        phone,
+        email,
+        storeName: shop_or_farm_name,
+        specialization: categoryIds,
+        city,
+        region,
+        yearsOfExperience: parseInt(experienceYears)
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Vendor registration submitted successfully. It will be reviewed within 24 hours.',
+      data: {
+        application_id: application.id,
+        status: application.status,
+        store_name: application.storeName,
+        categories: validCategories.map(cat => ({
+          id: cat.id,
+          name_ar: cat.nameAr,
+          name_en: cat.nameEn
+        })),
+        location: {
+          city: application.city,
+          region: application.region
+        },
+        experience_years: application.yearsOfExperience,
+        created_at: application.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Vendor registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to register as vendor',
+      error: error.message
+    });
+  }
+});
+
 // Search vendors
 router.get('/search', optionalAuth, async (req, res) => {
   try {
@@ -246,7 +402,8 @@ router.get('/:vendorId/profile', optionalAuth, async (req, res) => {
             id: true,
             fullName: true,
             email: true,
-            phone: true
+            phone: true,
+            profileImage: true
           }
         },
         categories: {
@@ -294,7 +451,8 @@ router.get('/:vendorId/profile', optionalAuth, async (req, res) => {
           id: vendor.user.id,
           full_name: vendor.user.fullName,
           email: vendor.user.email,
-          phone: vendor.user.phone
+          phone: vendor.user.phone,
+          profile_image: getImageUrl(vendor.user.profileImage)
         },
         location: {
           city: vendor.city,
@@ -413,7 +571,8 @@ router.get('/:vendorId/contact-info', optionalAuth, async (req, res) => {
           select: {
             fullName: true,
             phone: true,
-            email: true
+            email: true,
+            profileImage: true
           }
         }
       }
@@ -432,6 +591,7 @@ router.get('/:vendorId/contact-info', optionalAuth, async (req, res) => {
         vendor_id: vendor.id,
         store_name: vendor.storeName,
         owner_name: vendor.user.fullName,
+        owner_profile_image: getImageUrl(vendor.user.profileImage),
         contact: {
           whatsapp: vendor.whatsappNumber,
           call: vendor.callNumber,

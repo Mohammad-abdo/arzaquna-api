@@ -26,6 +26,7 @@ router.get('/profile', authenticate, async (req, res) => {
         fullName: true,
         email: true,
         phone: true,
+        profileImage: true,
         role: true,
         createdAt: true,
         vendorProfile: true
@@ -183,6 +184,7 @@ router.get('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
         fullName: true,
         email: true,
         phone: true,
+        profileImage: true,
         role: true,
         isActive: true,
         createdAt: true,

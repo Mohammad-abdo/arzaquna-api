@@ -53,6 +53,7 @@ router.post('/register', [
         fullName: true,
         email: true,
         phone: true,
+        profileImage: true,
         role: true
       }
     });
@@ -67,6 +68,7 @@ router.post('/register', [
           fullName: user.fullName,
           email: user.email,
           phone: user.phone,
+          profileImage: user.profileImage,
           role: user.role
         },
         token
@@ -142,6 +144,7 @@ router.post('/login', [
           fullName: user.fullName,
           email: user.email,
           phone: user.phone,
+          profileImage: user.profileImage,
           role: user.role,
           isVendor: !!user.vendorProfile,
           vendorApproved: user.vendorProfile?.isApproved || false

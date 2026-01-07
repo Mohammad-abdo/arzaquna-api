@@ -231,6 +231,95 @@ router.post('/vendor/statuses', authenticate, isVendor, upload.single('image'), 
   }
 });
 
+// Update status (Vendor only)
+router.put('/vendor/statuses/:statusId', authenticate, isVendor, upload.single('image'), [
+  body('price').optional().isFloat({ min: 0 }).withMessage('Valid price is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
+    const { statusId } = req.params;
+    const vendor = await prisma.vendor.findUnique({
+      where: { userId: req.user.id }
+    });
+
+    const status = await prisma.status.findFirst({
+      where: {
+        id: statusId,
+        vendorId: vendor.id
+      }
+    });
+
+    if (!status) {
+      return res.status(404).json({
+        success: false,
+        message: 'Status not found or you do not have permission'
+      });
+    }
+
+    const { productId, price, icon, titleAr, titleEn, descriptionAr, descriptionEn } = req.body;
+    const updateData = {};
+
+    if (price !== undefined) updateData.price = parseFloat(price);
+    if (productId !== undefined) updateData.productId = productId || null;
+    if (icon !== undefined) updateData.icon = icon;
+    if (titleAr !== undefined) updateData.titleAr = titleAr;
+    if (titleEn !== undefined) updateData.titleEn = titleEn;
+    if (descriptionAr !== undefined) updateData.descriptionAr = descriptionAr;
+    if (descriptionEn !== undefined) updateData.descriptionEn = descriptionEn;
+
+    // Handle image update
+    if (req.file) {
+      updateData.image = `/uploads/statuses/${req.file.filename}`;
+    }
+
+    const updatedStatus = await prisma.status.update({
+      where: { id: statusId },
+      data: updateData,
+      select: {
+        id: true,
+        image: true,
+        price: true,
+        icon: true,
+        titleAr: true,
+        titleEn: true,
+        descriptionAr: true,
+        descriptionEn: true,
+        productId: true,
+        updatedAt: true
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        id: updatedStatus.id,
+        image: getImageUrl(updatedStatus.image),
+        price: updatedStatus.price,
+        icon: updatedStatus.icon,
+        title_ar: updatedStatus.titleAr,
+        title_en: updatedStatus.titleEn,
+        description_ar: updatedStatus.descriptionAr,
+        description_en: updatedStatus.descriptionEn,
+        product_id: updatedStatus.productId,
+        updated_at: updatedStatus.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Update status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update status'
+    });
+  }
+});
+
 // Delete status (Vendor only)
 router.delete('/vendor/statuses/:statusId', authenticate, isVendor, async (req, res) => {
   try {

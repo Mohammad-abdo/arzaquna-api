@@ -352,7 +352,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
             id: true,
             fullName: true,
             email: true,
-            phone: true
+            phone: true,
+            profileImage: true
           }
         },
         categories: {
@@ -402,7 +403,8 @@ router.get('/profile/me', authenticate, isVendor, async (req, res) => {
             id: true,
             fullName: true,
             email: true,
-            phone: true
+            phone: true,
+            profileImage: true
           }
         },
         categories: {

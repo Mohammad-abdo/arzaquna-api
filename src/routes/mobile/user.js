@@ -3,6 +3,8 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const prisma = require('../../config/database');
 const { authenticate } = require('../../middleware/auth');
+const upload = require('../../utils/upload');
+const { getImageUrl } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
@@ -16,6 +18,7 @@ router.get('/profile', authenticate, async (req, res) => {
         fullName: true,
         email: true,
         phone: true,
+        profileImage: true,
         role: true,
         createdAt: true,
         vendorProfile: {
@@ -35,6 +38,7 @@ router.get('/profile', authenticate, async (req, res) => {
         full_name: user.fullName,
         email: user.email,
         phone: user.phone,
+        profile_image: getImageUrl(user.profileImage),
         role: user.role,
         is_vendor: !!user.vendorProfile,
         vendor_approved: user.vendorProfile?.isApproved || false,
@@ -51,9 +55,10 @@ router.get('/profile', authenticate, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', authenticate, [
+router.put('/profile', authenticate, upload.single('profileImage'), [
   body('fullName').optional().trim().notEmpty(),
-  body('phone').optional().trim().notEmpty()
+  body('phone').optional().trim().notEmpty(),
+  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -64,7 +69,7 @@ router.put('/profile', authenticate, [
       });
     }
 
-    const { fullName, phone } = req.body;
+    const { fullName, phone, password } = req.body;
     const updateData = {};
 
     if (fullName) updateData.fullName = fullName;
@@ -85,6 +90,17 @@ router.put('/profile', authenticate, [
       updateData.phone = phone;
     }
 
+    // Handle password update
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateData.password = hashedPassword;
+    }
+
+    // Handle profile image upload
+    if (req.file) {
+      updateData.profileImage = `/uploads/general/${req.file.filename}`;
+    }
+
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data: updateData,
@@ -92,7 +108,8 @@ router.put('/profile', authenticate, [
         id: true,
         fullName: true,
         email: true,
-        phone: true
+        phone: true,
+        profileImage: true
       }
     });
 
@@ -102,7 +119,8 @@ router.put('/profile', authenticate, [
         id: user.id,
         full_name: user.fullName,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        profile_image: getImageUrl(user.profileImage)
       }
     });
   } catch (error) {
