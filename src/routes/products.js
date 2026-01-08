@@ -140,30 +140,145 @@ router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        vendor: {
-          include: {
-            user: {
+    let product;
+    try {
+      product = await prisma.product.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          nameAr: true,
+          nameEn: true,
+          age: true,
+          weight: true,
+          price: true,
+          rating: true,
+          images: true,
+          descriptionAr: true,
+          descriptionEn: true,
+          isActive: true,
+          isApproved: true,
+          isBestProduct: true,
+          approvedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          vendor: {
+            select: {
+              id: true,
+              storeName: true,
+              city: true,
+              region: true,
+              user: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true,
+                  phone: true
+                }
+              },
+              categories: {
+                select: {
+                  category: {
+                    select: {
+                      id: true,
+                      nameAr: true,
+                      nameEn: true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              nameAr: true,
+              nameEn: true
+            }
+          },
+          specifications: {
+            select: {
+              key: true,
+              valueAr: true,
+              valueEn: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      // If new columns don't exist, use select without them
+      if (error.message && (error.message.includes('rating') || error.message.includes('isBestProduct'))) {
+        product = await prisma.product.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            age: true,
+            weight: true,
+            price: true,
+            images: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            isApproved: true,
+            approvedAt: true,
+            createdAt: true,
+            updatedAt: true,
+            vendor: {
               select: {
                 id: true,
-                fullName: true,
-                email: true,
-                phone: true
+                storeName: true,
+                city: true,
+                region: true,
+                user: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    phone: true
+                  }
+                },
+                categories: {
+                  select: {
+                    category: {
+                      select: {
+                        id: true,
+                        nameAr: true,
+                        nameEn: true
+                      }
+                    }
+                  }
+                }
               }
             },
-            categories: {
-              include: {
-                category: true
+            category: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true
+              }
+            },
+            specifications: {
+              select: {
+                key: true,
+                valueAr: true,
+                valueEn: true
               }
             }
           }
-        },
-        category: true,
-        specifications: true
+        });
+        // Add default values for missing fields
+        if (product) {
+          product = {
+            ...product,
+            rating: null,
+            isBestProduct: false
+          };
+        }
+      } else {
+        throw error;
       }
-    });
+    }
 
     if (!product || !product.isActive) {
       return res.status(404).json({
