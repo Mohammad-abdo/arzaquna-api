@@ -185,8 +185,9 @@ router.get('/products/pending', async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
+    let products;
+    try {
+      products = await prisma.product.findMany({
         where: {
           isApproved: false,
           isActive: true
@@ -209,14 +210,78 @@ router.get('/products/pending', async (req, res) => {
           specifications: true
         },
         orderBy: { createdAt: 'desc' }
-      }),
-      prisma.product.count({
-        where: {
-          isApproved: false,
-          isActive: true
-        }
-      })
-    ]);
+      });
+    } catch (error) {
+      // If new columns don't exist, use select without them
+      if (error.message && (error.message.includes('rating') || error.message.includes('isBestProduct'))) {
+        products = await prisma.product.findMany({
+          where: {
+            isApproved: false,
+            isActive: true
+          },
+          skip,
+          take: parseInt(limit),
+          select: {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            age: true,
+            weight: true,
+            price: true,
+            images: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            isApproved: true,
+            createdAt: true,
+            updatedAt: true,
+            vendor: {
+              select: {
+                id: true,
+                storeName: true,
+                user: {
+                  select: {
+                    fullName: true,
+                    email: true,
+                    phone: true
+                  }
+                }
+              }
+            },
+            category: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true
+              }
+            },
+            specifications: {
+              select: {
+                key: true,
+                valueAr: true,
+                valueEn: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        // Add default values for missing fields
+        products = products.map(p => ({
+          ...p,
+          rating: null,
+          isBestProduct: false
+        }));
+      } else {
+        throw error;
+      }
+    }
+
+    const total = await prisma.product.count({
+      where: {
+        isApproved: false,
+        isActive: true
+      }
+    });
 
     res.json({
       success: true,
@@ -249,8 +314,9 @@ router.get('/orders', async (req, res) => {
     const where = {};
     if (status) where.status = status;
 
-    const [orders, total] = await Promise.all([
-      prisma.order.findMany({
+    let orders;
+    try {
+      orders = await prisma.order.findMany({
         where,
         skip,
         take: parseInt(limit),
@@ -277,14 +343,122 @@ router.get('/orders', async (req, res) => {
           },
           items: {
             include: {
-              product: true
+              product: {
+                select: {
+                  id: true,
+                  nameAr: true,
+                  nameEn: true,
+                  age: true,
+                  weight: true,
+                  price: true,
+                  images: true,
+                  descriptionAr: true,
+                  descriptionEn: true,
+                  isActive: true,
+                  isApproved: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  category: {
+                    select: {
+                      id: true,
+                      nameAr: true,
+                      nameEn: true
+                    }
+                  }
+                }
+              }
             }
           }
         },
         orderBy: { createdAt: 'desc' }
-      }),
-      prisma.order.count({ where })
-    ]);
+      });
+    } catch (error) {
+      // If new columns don't exist, use select without them
+      if (error.message && (error.message.includes('rating') || error.message.includes('isBestProduct'))) {
+        orders = await prisma.order.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          select: {
+            id: true,
+            status: true,
+            notes: true,
+            createdAt: true,
+            updatedAt: true,
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                phone: true
+              }
+            },
+            vendor: {
+              select: {
+                id: true,
+                storeName: true,
+                user: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    phone: true
+                  }
+                }
+              }
+            },
+            items: {
+              select: {
+                id: true,
+                quantity: true,
+                price: true,
+                product: {
+                  select: {
+                    id: true,
+                    nameAr: true,
+                    nameEn: true,
+                    age: true,
+                    weight: true,
+                    price: true,
+                    images: true,
+                    descriptionAr: true,
+                    descriptionEn: true,
+                    isActive: true,
+                    isApproved: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    category: {
+                      select: {
+                        id: true,
+                        nameAr: true,
+                        nameEn: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        // Add default values for missing fields in products
+        orders = orders.map(order => ({
+          ...order,
+          items: order.items.map(item => ({
+            ...item,
+            product: {
+              ...item.product,
+              rating: null,
+              isBestProduct: false
+            }
+          }))
+        }));
+      } else {
+        throw error;
+      }
+    }
+
+    const total = await prisma.order.count({ where });
 
     res.json({
       success: true,
@@ -1181,7 +1355,30 @@ router.post('/statuses', upload.single('image'), [
             }
           }
         },
-        product: true
+        product: {
+          select: {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            age: true,
+            weight: true,
+            price: true,
+            images: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            isApproved: true,
+            createdAt: true,
+            updatedAt: true,
+            category: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true
+              }
+            }
+          }
+        }
       }
     });
 

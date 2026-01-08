@@ -15,8 +15,9 @@ router.get('/', optionalAuth, async (req, res) => {
     const where = { isActive: true };
     if (vendorId) where.vendorId = vendorId;
 
-    const [statuses, total] = await Promise.all([
-      prisma.status.findMany({
+    let statuses;
+    try {
+      statuses = await prisma.status.findMany({
         where,
         skip,
         take: parseInt(limit),
@@ -33,15 +34,106 @@ router.get('/', optionalAuth, async (req, res) => {
             }
           },
           product: {
-            include: {
-              category: true
+            select: {
+              id: true,
+              nameAr: true,
+              nameEn: true,
+              age: true,
+              weight: true,
+              price: true,
+              images: true,
+              descriptionAr: true,
+              descriptionEn: true,
+              isActive: true,
+              isApproved: true,
+              createdAt: true,
+              updatedAt: true,
+              category: {
+                select: {
+                  id: true,
+                  nameAr: true,
+                  nameEn: true
+                }
+              }
             }
           }
         },
         orderBy: { createdAt: 'desc' }
-      }),
-      prisma.status.count({ where })
-    ]);
+      });
+    } catch (error) {
+      // If new columns don't exist, use select without them
+      if (error.message && (error.message.includes('rating') || error.message.includes('isBestProduct'))) {
+        statuses = await prisma.status.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          select: {
+            id: true,
+            image: true,
+            price: true,
+            icon: true,
+            titleAr: true,
+            titleEn: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            vendor: {
+              select: {
+                id: true,
+                storeName: true,
+                user: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                    phone: true
+                  }
+                }
+              }
+            },
+            product: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true,
+                age: true,
+                weight: true,
+                price: true,
+                images: true,
+                descriptionAr: true,
+                descriptionEn: true,
+                isActive: true,
+                isApproved: true,
+                createdAt: true,
+                updatedAt: true,
+                category: {
+                  select: {
+                    id: true,
+                    nameAr: true,
+                    nameEn: true
+                  }
+                }
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        // Add default values for missing fields in products
+        statuses = statuses.map(status => ({
+          ...status,
+          product: status.product ? {
+            ...status.product,
+            rating: null,
+            isBestProduct: false
+          } : null
+        }));
+      } else {
+        throw error;
+      }
+    }
+
+    const total = await prisma.status.count({ where });
 
     res.json({
       success: true,
@@ -195,7 +287,30 @@ router.post('/', authenticate, upload.single('image'), [
             }
           }
         },
-        product: true
+        product: {
+          select: {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            age: true,
+            weight: true,
+            price: true,
+            images: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            isApproved: true,
+            createdAt: true,
+            updatedAt: true,
+            category: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true
+              }
+            }
+          }
+        }
       }
     });
 
@@ -272,7 +387,30 @@ router.put('/:id', authenticate, isVendor, upload.single('image'), [
             }
           }
         },
-        product: true
+        product: {
+          select: {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            age: true,
+            weight: true,
+            price: true,
+            images: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            isApproved: true,
+            createdAt: true,
+            updatedAt: true,
+            category: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true
+              }
+            }
+          }
+        }
       }
     });
 

@@ -26,8 +26,9 @@ router.get('/', optionalAuth, async (req, res) => {
       ];
     }
 
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
+    let products;
+    try {
+      products = await prisma.product.findMany({
         where,
         skip,
         take: parseInt(limit),
@@ -47,9 +48,70 @@ router.get('/', optionalAuth, async (req, res) => {
           specifications: true
         },
         orderBy: { createdAt: 'desc' }
-      }),
-      prisma.product.count({ where })
-    ]);
+      });
+    } catch (error) {
+      // If new columns don't exist, use select without them
+      if (error.message && (error.message.includes('rating') || error.message.includes('isBestProduct'))) {
+        products = await prisma.product.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          select: {
+            id: true,
+            nameAr: true,
+            nameEn: true,
+            age: true,
+            weight: true,
+            price: true,
+            images: true,
+            descriptionAr: true,
+            descriptionEn: true,
+            isActive: true,
+            isApproved: true,
+            createdAt: true,
+            updatedAt: true,
+            vendor: {
+              select: {
+                id: true,
+                storeName: true,
+                user: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                    phone: true
+                  }
+                }
+              }
+            },
+            category: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true
+              }
+            },
+            specifications: {
+              select: {
+                key: true,
+                valueAr: true,
+                valueEn: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        // Add default values for missing fields
+        products = products.map(p => ({
+          ...p,
+          rating: null,
+          isBestProduct: false
+        }));
+      } else {
+        throw error;
+      }
+    }
+
+    const total = await prisma.product.count({ where });
 
     res.json({
       success: true,

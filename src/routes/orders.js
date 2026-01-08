@@ -106,9 +106,34 @@ router.get('/:id', authenticate, async (req, res) => {
         items: {
           include: {
             product: {
-              include: {
-                category: true,
-                specifications: true
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true,
+                age: true,
+                weight: true,
+                price: true,
+                images: true,
+                descriptionAr: true,
+                descriptionEn: true,
+                isActive: true,
+                isApproved: true,
+                createdAt: true,
+                updatedAt: true,
+                category: {
+                  select: {
+                    id: true,
+                    nameAr: true,
+                    nameEn: true
+                  }
+                },
+                specifications: {
+                  select: {
+                    key: true,
+                    valueAr: true,
+                    valueEn: true
+                  }
+                }
               }
             }
           }
@@ -224,8 +249,27 @@ router.post('/', authenticate, [
         items: {
           include: {
             product: {
-              include: {
-                category: true
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true,
+                age: true,
+                weight: true,
+                price: true,
+                images: true,
+                descriptionAr: true,
+                descriptionEn: true,
+                isActive: true,
+                isApproved: true,
+                createdAt: true,
+                updatedAt: true,
+                category: {
+                  select: {
+                    id: true,
+                    nameAr: true,
+                    nameEn: true
+                  }
+                }
               }
             }
           }
@@ -313,7 +357,30 @@ router.put('/:id/status', authenticate, [
         },
         items: {
           include: {
-            product: true
+            product: {
+              select: {
+                id: true,
+                nameAr: true,
+                nameEn: true,
+                age: true,
+                weight: true,
+                price: true,
+                images: true,
+                descriptionAr: true,
+                descriptionEn: true,
+                isActive: true,
+                isApproved: true,
+                createdAt: true,
+                updatedAt: true,
+                category: {
+                  select: {
+                    id: true,
+                    nameAr: true,
+                    nameEn: true
+                  }
+                }
+              }
+            }
           }
         }
       }
