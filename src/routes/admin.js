@@ -906,7 +906,7 @@ router.post('/products', upload.array('images', 10), [
       });
     }
 
-    const { nameAr, nameEn, categoryId, vendorId, age, weight, descriptionAr, descriptionEn, price, specifications } = req.body;
+    const { nameAr, nameEn, categoryId, vendorId, age, weight, descriptionAr, descriptionEn, price, rating, isBestProduct, specifications } = req.body;
 
     // Verify vendor exists
     const vendor = await prisma.vendor.findUnique({
@@ -933,8 +933,10 @@ router.post('/products', upload.array('images', 10), [
         descriptionAr,
         descriptionEn,
         price: parseFloat(price),
+        rating: rating ? parseFloat(rating) : 0,
         images: images,
         isApproved: true, // Admin-created products are auto-approved
+        isBestProduct: isBestProduct === 'true' || isBestProduct === true,
         approvedAt: new Date()
       },
       include: {
@@ -1013,7 +1015,7 @@ router.put('/products/:id', upload.array('images', 10), [
     }
 
     const { id } = req.params;
-    const { nameAr, nameEn, categoryId, age, weight, descriptionAr, descriptionEn, price, specifications } = req.body;
+    const { nameAr, nameEn, categoryId, age, weight, descriptionAr, descriptionEn, price, rating, isBestProduct, specifications } = req.body;
 
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
@@ -1036,6 +1038,8 @@ router.put('/products/:id', upload.array('images', 10), [
     if (descriptionAr !== undefined) updateData.descriptionAr = descriptionAr;
     if (descriptionEn !== undefined) updateData.descriptionEn = descriptionEn;
     if (price) updateData.price = parseFloat(price);
+    if (rating !== undefined) updateData.rating = parseFloat(rating);
+    if (isBestProduct !== undefined) updateData.isBestProduct = isBestProduct === 'true' || isBestProduct === true;
     if (req.files && req.files.length > 0) {
       updateData.images = req.files.map(file => `/uploads/products/${file.filename}`);
     }

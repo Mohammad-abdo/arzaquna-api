@@ -8,6 +8,101 @@ const { ensureImagesArray, getImageUrl, getImageUrls } = require('../../utils/js
 
 const router = express.Router();
 
+// Get latest vendors
+router.get('/latest', optionalAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [vendors, total] = await Promise.all([
+      prisma.vendor.findMany({
+        where: {
+          isApproved: true
+        },
+        select: {
+          id: true,
+          storeName: true,
+          city: true,
+          region: true,
+          yearsOfExperience: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              phone: true,
+              email: true,
+              profileImage: true
+            }
+          },
+          _count: {
+            select: {
+              products: {
+                where: {
+                  isActive: true,
+                  isApproved: true
+                }
+              },
+              statuses: {
+                where: {
+                  isActive: true
+                }
+              }
+            }
+          }
+        },
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.vendor.count({
+        where: {
+          isApproved: true
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        vendors: vendors.map(vendor => ({
+          id: vendor.id,
+          store_name: vendor.storeName,
+          owner: {
+            id: vendor.user.id,
+            full_name: vendor.user.fullName,
+            email: vendor.user.email,
+            phone: vendor.user.phone,
+            profile_image: getImageUrl(vendor.user.profileImage)
+          },
+          location: {
+            city: vendor.city,
+            region: vendor.region
+          },
+          years_experience: vendor.yearsOfExperience,
+          stats: {
+            products_count: vendor._count.products,
+            offers_count: vendor._count.statuses
+          },
+          created_at: vendor.createdAt
+        })),
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get latest vendors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch latest vendors'
+    });
+  }
+});
+
 // Vendor registration
 router.post('/register', authenticate, [
   body('fullName').trim().notEmpty().withMessage('Full name is required'),

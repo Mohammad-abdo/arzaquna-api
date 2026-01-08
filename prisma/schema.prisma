@@ -148,9 +148,11 @@ model Product {
   descriptionAr String?
   descriptionEn String?
   price         Float
+  rating        Float?    @default(0)
   images        Json // Array of image URLs stored as JSON
   isActive      Boolean   @default(true)
   isApproved    Boolean   @default(false)
+  isBestProduct Boolean   @default(false)
   approvedAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -167,6 +169,7 @@ model Product {
   @@index([categoryId])
   @@index([isActive])
   @@index([isApproved])
+  @@index([isBestProduct])
 }
 
 // Product Specifications (varies by category)

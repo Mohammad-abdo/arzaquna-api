@@ -284,6 +284,36 @@
 			"name": "Vendors",
 			"item": [
 				{
+					"name": "Get Latest Vendors",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/vendors/latest?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "vendors", "latest"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get latest approved vendors with pagination. Returns vendor information including owner profile image, location, experience, and stats."
+					},
+					"response": []
+				},
+				{
 					"name": "Search Vendors",
 					"request": {
 						"method": "GET",
@@ -495,6 +525,36 @@
 			"name": "Products",
 			"item": [
 				{
+					"name": "Get Best Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/mobile/products/best?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mobile", "products", "best"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get best/featured products. Returns products with isBestProduct=true. Includes: price, rating, location (city/region), product name, images (full URLs), full product details, specifications, and vendor information."
+					},
+					"response": []
+				},
+				{
 					"name": "Search Products",
 					"request": {
 						"method": "GET",
@@ -561,7 +621,7 @@
 								}
 							]
 						},
-						"description": "Get complete product details"
+						"description": "Get complete product details with full image URLs, rating, location, specifications, and all product information."
 					},
 					"response": []
 				},

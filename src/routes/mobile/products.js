@@ -5,6 +5,129 @@ const { ensureImagesArray, getImageUrls } = require('../../utils/jsonHelper');
 
 const router = express.Router();
 
+// Get best products (featured products)
+router.get('/best', optionalAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          isBestProduct: true,
+          isActive: true,
+          isApproved: true
+        },
+        select: {
+          id: true,
+          nameAr: true,
+          nameEn: true,
+          age: true,
+          weight: true,
+          price: true,
+          rating: true,
+          images: true,
+          descriptionAr: true,
+          descriptionEn: true,
+          createdAt: true,
+          category: {
+            select: {
+              id: true,
+              nameAr: true,
+              nameEn: true
+            }
+          },
+          vendor: {
+            select: {
+              id: true,
+              storeName: true,
+              city: true,
+              region: true,
+              user: {
+                select: {
+                  fullName: true,
+                  phone: true
+                }
+              }
+            }
+          },
+          specifications: {
+            select: {
+              key: true,
+              valueAr: true,
+              valueEn: true
+            }
+          }
+        },
+        skip,
+        take: parseInt(limit),
+        orderBy: [
+          { rating: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      }),
+      prisma.product.count({
+        where: {
+          isBestProduct: true,
+          isActive: true,
+          isApproved: true
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        products: products.map(product => ({
+          id: product.id,
+          name_ar: product.nameAr,
+          name_en: product.nameEn,
+          age: product.age,
+          weight: product.weight,
+          price: product.price,
+          rating: product.rating || 0,
+          images: getImageUrls(product.images),
+          description_ar: product.descriptionAr,
+          description_en: product.descriptionEn,
+          location: {
+            city: product.vendor.city,
+            region: product.vendor.region
+          },
+          category: {
+            id: product.category.id,
+            name_ar: product.category.nameAr,
+            name_en: product.category.nameEn
+          },
+          vendor: {
+            id: product.vendor.id,
+            store_name: product.vendor.storeName,
+            owner_name: product.vendor.user.fullName,
+            phone: product.vendor.user.phone
+          },
+          specifications: product.specifications.map(spec => ({
+            key: spec.key,
+            value_ar: spec.valueAr,
+            value_en: spec.valueEn
+          })),
+          created_at: product.createdAt
+        })),
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get best products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch best products'
+    });
+  }
+});
+
 // Search products
 router.get('/search', optionalAuth, async (req, res) => {
   try {
@@ -123,12 +246,20 @@ router.get('/:productId', optionalAuth, async (req, res) => {
         age: true,
         weight: true,
         price: true,
+        rating: true,
         images: true,
         descriptionAr: true,
         descriptionEn: true,
         isActive: true,
         isApproved: true,
         createdAt: true,
+        specifications: {
+          select: {
+            key: true,
+            valueAr: true,
+            valueEn: true
+          }
+        },
         category: {
           select: {
             id: true,
@@ -169,9 +300,14 @@ router.get('/:productId', optionalAuth, async (req, res) => {
         age: product.age,
         weight: product.weight,
         price: product.price,
-        images: ensureImagesArray(product.images),
+        rating: product.rating || 0,
+        images: getImageUrls(product.images),
         description_ar: product.descriptionAr,
         description_en: product.descriptionEn,
+        location: {
+          city: product.vendor.city,
+          region: product.vendor.region
+        },
         category: {
           id: product.category.id,
           name_ar: product.category.nameAr,
@@ -181,10 +317,13 @@ router.get('/:productId', optionalAuth, async (req, res) => {
           id: product.vendor.id,
           store_name: product.vendor.storeName,
           owner_name: product.vendor.user.fullName,
-          city: product.vendor.city,
-          region: product.vendor.region,
           phone: product.vendor.user.phone
         },
+        specifications: product.specifications.map(spec => ({
+          key: spec.key,
+          value_ar: spec.valueAr,
+          value_en: spec.valueEn
+        })),
         created_at: product.createdAt
       }
     });
